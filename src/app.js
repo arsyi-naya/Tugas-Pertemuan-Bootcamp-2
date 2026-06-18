@@ -1,22 +1,31 @@
+require("dotenv").config();
 const express = require("express");
-const bookRoutes = require("./routes/book.Routes");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
-
 app.use(express.json());
 
-app.use("/books", bookRoutes);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api/auth", authRoutes);
 
-app.use((req, res) => {
-    res.status(404).json({
-        message: "Endpoint tidak ditemukan"
-    });
+/**
+ * @openapi
+ * /health:
+ * get:
+ * summary: Mengecek status kesehatan server backend
+ * responses:
+ * 200:
+ * description: Server berjalan dengan baik
+ */
+app.get("/health", (req, res) => {
+  res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
 app.use((err, req, res, next) => {
-    res.status(err.status || 500).json({
-        message: err.message || "Internal Server Error"
-    });
+  console.error(err);
+  res.status(err.status || 500).json({ message: "Terjadi kesalahan pada server" });
 });
 
 module.exports = app;
